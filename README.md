@@ -17,11 +17,31 @@ Implemented endpoints:
 ## Requirements
 
 - Python 3.11+
-- Poetry
+- pip
 
 ## Installation
 
-Install the package:
+For a fresh clone of the repository, create and activate a virtual environment first.
+
+Windows PowerShell:
+
+```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install poetry
+```
+
+macOS/Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install poetry
+```
+
+Then install the package dependencies:
 
 ```bash
 poetry install
