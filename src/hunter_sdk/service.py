@@ -1,4 +1,4 @@
-"""Service layer that persists SDK operation results."""
+"""Gateway that stores records produced by Hunter API operations."""
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -15,15 +15,15 @@ from hunter_sdk.models import OperationResult, OperationType, StorageRecord
 from hunter_sdk.protocols import HunterClientProtocol, StorageProtocol
 
 
-class HunterService:
-    """Service layer that persists Hunter API results."""
+class HunterRecordsGateway:
+    """Runs Hunter API operations and persists the resulting records."""
 
     def __init__(
         self,
         client: HunterClientProtocol,
         storage: StorageProtocol,
     ) -> None:
-        """Create a service with an API client and storage backend."""
+        """Create a gateway with a Hunter client and storage backend."""
         self.client = client
         self.storage = storage
 

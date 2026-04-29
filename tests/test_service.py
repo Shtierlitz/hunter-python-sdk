@@ -8,12 +8,12 @@ from hunter_sdk.models import (
     EmailVerificationResult,
 )
 from hunter_sdk.models import OperationType
-from hunter_sdk.service import HunterService
+from hunter_sdk.service import HunterRecordsGateway
 
 from conftest import assert_record_saved
 
 
-def test_search_domain_saves_record(service: HunterService) -> None:
+def test_search_domain_saves_record(service: HunterRecordsGateway) -> None:
     """Domain search should be persisted in storage."""
     record = service.search_domain(domain="durmstrang.com")
     domain_search_result = cast(DomainSearchResult, record.operation_result)
@@ -24,7 +24,7 @@ def test_search_domain_saves_record(service: HunterService) -> None:
     assert_record_saved(service.storage, record)
 
 
-def test_find_email_saves_record(service: HunterService) -> None:
+def test_find_email_saves_record(service: HunterRecordsGateway) -> None:
     """Email finder should be persisted in storage."""
     record = service.find_email(
         domain="durmstrang.com",
@@ -43,7 +43,7 @@ def test_find_email_saves_record(service: HunterService) -> None:
     assert_record_saved(service.storage, record)
 
 
-def test_verify_email_saves_record(service: HunterService) -> None:
+def test_verify_email_saves_record(service: HunterRecordsGateway) -> None:
     """Email verification should be persisted in storage."""
     record = service.verify_email(email="igor@durmstrang.com")
     email_verification_result = cast(EmailVerificationResult, record.operation_result)

@@ -1,7 +1,7 @@
 """HTTP client for the supported Hunter API endpoints."""
 
 import json
-from typing import Any, Self
+from typing import Any
 
 import httpx
 
@@ -10,32 +10,7 @@ from hunter_sdk.exceptions import HunterApiError, HunterTransportError
 from hunter_sdk.models import DomainSearchResult, EmailFinderResult, EmailVerificationResult
 
 
-class BaseHttpClient:
-    """Reusable wrapper around ``httpx.Client`` lifecycle."""
-
-    def __init__(self, http_client: httpx.Client) -> None:
-        """Wrap an existing ``httpx.Client`` instance."""
-        self._http_client = http_client
-
-    @property
-    def is_closed(self) -> bool:
-        """Return whether the underlying HTTP client is closed."""
-        return self._http_client.is_closed
-
-    def close(self) -> None:
-        """Close the underlying HTTP client."""
-        self._http_client.close()
-
-    def __enter__(self) -> Self:
-        """Return the client itself for context-managed use."""
-        return self
-
-    def __exit__(self, *_args: object) -> None:
-        """Close the underlying HTTP client on context exit."""
-        self.close()
-
-
-class HunterClient(BaseHttpClient):
+class HunterApiClient:
     """Small sync client for Hunter.io API v2."""
 
     def __init__(
@@ -50,7 +25,10 @@ class HunterClient(BaseHttpClient):
             timeout=timeout,
             headers={"X-API-KEY": api_key},
         )
-        super().__init__(self._http_client)
+
+    def close(self) -> None:
+        """Close the underlying HTTP client."""
+        self._http_client.close()
 
     def domain_search(
         self,
@@ -124,6 +102,7 @@ class HunterClient(BaseHttpClient):
     ) -> dict[str, Any]:
         """Perform a GET request and validate the response status."""
         statuses = allowed_status_codes or {api_constants.HTTP_STATUS_OK}
+        self._ensure_open()
         try:
             response = self._http_client.get(path, params=query_params)
         except httpx.HTTPError as transport_error:
@@ -137,3 +116,8 @@ class HunterClient(BaseHttpClient):
             raise HunterApiError(response.status_code, errors)
         response_payload["status_code"] = response.status_code
         return response_payload
+
+    def _ensure_open(self) -> None:
+        """Fail before sending requests through a closed HTTP client."""
+        if self._http_client.is_closed:
+            raise HunterTransportError("Hunter API client is closed")

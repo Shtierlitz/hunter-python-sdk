@@ -4,8 +4,8 @@ Small synchronous Python SDK for the Hunter.io API v2.
 
 The package exposes:
 
-- `HunterClient` for direct API calls
-- `HunterService` for API calls plus persistence
+- `HunterApiClient` for direct API calls
+- `HunterRecordsGateway` for API calls plus persistence
 - `InMemoryStorage` as a simple dictionary-backed CRUD storage
 
 Implemented endpoints:
@@ -58,9 +58,9 @@ poetry install --extras dev
 ### Direct client usage
 
 ```python
-from hunter_sdk.client import HunterClient
+from hunter_sdk.client import HunterApiClient
 
-client = HunterClient(api_key='test-api-key')
+client = HunterApiClient(api_key='test-api-key')
 
 domain_result = client.domain_search(domain='example.com')
 print(domain_result.domain)
@@ -81,13 +81,13 @@ print(verification_result.is_pending)
 ### Service usage with storage
 
 ```python
-from hunter_sdk.client import HunterClient
-from hunter_sdk.service import HunterService
+from hunter_sdk.client import HunterApiClient
+from hunter_sdk.service import HunterRecordsGateway
 from hunter_sdk.storage import InMemoryStorage
 
 storage = InMemoryStorage()
-client = HunterClient(api_key='test-api-key')
-service = HunterService(client=client, storage=storage)
+client = HunterApiClient(api_key='test-api-key')
+service = HunterRecordsGateway(client=client, storage=storage)
 
 domain_record = service.search_domain(domain='example.com')
 finder_record = service.find_email(
@@ -123,10 +123,10 @@ The client raises:
 Example:
 
 ```python
-from hunter_sdk.client import HunterClient
+from hunter_sdk.client import HunterApiClient
 from hunter_sdk.exceptions import HunterApiError, HunterTransportError
 
-client = HunterClient(api_key='test-api-key')
+client = HunterApiClient(api_key='test-api-key')
 
 try:
     result = client.domain_search(domain='example.com')

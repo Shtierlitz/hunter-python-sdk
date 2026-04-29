@@ -4,7 +4,7 @@ import httpx
 import pytest
 import respx
 
-from hunter_sdk.client import HunterClient
+from hunter_sdk.client import HunterApiClient
 from hunter_sdk.exceptions import HunterApiError, HunterTransportError
 
 from conftest import build_response
@@ -12,7 +12,7 @@ from conftest import build_response
 
 @respx.mock
 def test_domain_search_returns_typed_result(
-    client: HunterClient,
+    client: HunterApiClient,
     response_headers: dict[str, str],
 ) -> None:
     """Domain search should return a normalized typed result."""
@@ -40,7 +40,7 @@ def test_domain_search_returns_typed_result(
 
 
 @respx.mock
-def test_email_finder_returns_typed_result(client: HunterClient) -> None:
+def test_email_finder_returns_typed_result(client: HunterApiClient) -> None:
     """Email finder should return a normalized typed result."""
     respx.get("https://api.hunter.io/v2/email-finder").mock(
         return_value=build_response(
@@ -68,7 +68,7 @@ def test_email_finder_returns_typed_result(client: HunterClient) -> None:
 
 
 @respx.mock
-def test_email_verifier_returns_typed_result(client: HunterClient) -> None:
+def test_email_verifier_returns_typed_result(client: HunterApiClient) -> None:
     """Email verifier should return a normalized typed result."""
     respx.get("https://api.hunter.io/v2/email-verifier").mock(
         return_value=build_response(
@@ -92,7 +92,7 @@ def test_email_verifier_returns_typed_result(client: HunterClient) -> None:
 
 
 @respx.mock
-def test_email_verifier_maps_accepted_response(client: HunterClient) -> None:
+def test_email_verifier_maps_accepted_response(client: HunterApiClient) -> None:
     """Accepted verification responses should be marked as pending."""
     respx.get("https://api.hunter.io/v2/email-verifier").mock(
         return_value=build_response(
@@ -113,7 +113,7 @@ def test_email_verifier_maps_accepted_response(client: HunterClient) -> None:
 
 @respx.mock
 def test_email_verifier_handles_accepted_response_without_data(
-    client: HunterClient,
+    client: HunterApiClient,
 ) -> None:
     """Accepted responses without ``data`` should still map to pending result."""
     respx.get("https://api.hunter.io/v2/email-verifier").mock(
@@ -144,7 +144,7 @@ def test_email_verifier_handles_accepted_response_without_data(
 
 
 @respx.mock
-def test_client_raises_api_error_for_failed_response(client: HunterClient) -> None:
+def test_client_raises_api_error_for_failed_response(client: HunterApiClient) -> None:
     """Client should raise API error for non-success responses."""
     respx.get("https://api.hunter.io/v2/domain-search").mock(
         return_value=build_response(
@@ -169,7 +169,7 @@ def test_client_raises_api_error_for_failed_response(client: HunterClient) -> No
 
 
 @respx.mock
-def test_client_raises_transport_error(client: HunterClient) -> None:
+def test_client_raises_transport_error(client: HunterApiClient) -> None:
     """Client should wrap transport exceptions."""
     respx.get("https://api.hunter.io/v2/domain-search").mock(
         side_effect=httpx.ConnectError("boom"),
@@ -180,7 +180,7 @@ def test_client_raises_transport_error(client: HunterClient) -> None:
 
 
 @respx.mock
-def test_client_wraps_non_json_response(client: HunterClient) -> None:
+def test_client_wraps_non_json_response(client: HunterApiClient) -> None:
     """Client should wrap invalid JSON responses as transport errors."""
     respx.get("https://api.hunter.io/v2/domain-search").mock(
         return_value=httpx.Response(
@@ -196,16 +196,9 @@ def test_client_wraps_non_json_response(client: HunterClient) -> None:
 
 def test_client_can_be_closed_explicitly() -> None:
     """Client should expose explicit close support."""
-    client = HunterClient(api_key="test-api-key")
+    client = HunterApiClient(api_key="test-api-key")
 
     client.close()
 
-    assert client.is_closed is True
-
-
-def test_client_closes_on_context_manager_exit() -> None:
-    """Context manager exit should close the client."""
-    with HunterClient(api_key="test-api-key") as client:
-        assert client.is_closed is False
-
-    assert client.is_closed is True
+    with pytest.raises(HunterTransportError):
+        client.domain_search(domain="example.com")

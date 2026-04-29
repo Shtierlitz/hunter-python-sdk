@@ -5,14 +5,14 @@ from typing import Any
 import httpx
 import pytest
 
-from hunter_sdk.client import HunterClient
+from hunter_sdk.client import HunterApiClient
 from hunter_sdk.models import (
     DomainSearchResult,
     EmailFinderResult,
     EmailVerificationResult,
     StorageRecord,
 )
-from hunter_sdk.service import HunterService
+from hunter_sdk.service import HunterRecordsGateway
 from hunter_sdk.protocols import StorageProtocol
 from hunter_sdk.storage import InMemoryStorage
 
@@ -24,9 +24,9 @@ def api_key() -> str:
 
 
 @pytest.fixture
-def client(api_key: str) -> HunterClient:
+def client(api_key: str) -> HunterApiClient:
     """Create a real Hunter client for HTTP-level tests."""
-    return HunterClient(api_key=api_key)
+    return HunterApiClient(api_key=api_key)
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def storage() -> InMemoryStorage:
 
 
 @pytest.fixture
-def service(client: HunterClient, storage: InMemoryStorage) -> HunterService:
+def service(client: HunterApiClient, storage: InMemoryStorage) -> HunterRecordsGateway:
     """Create a service wired to a stubbed client and real storage."""
     class StubHunterClient:
         def domain_search(self, domain: str, limit: int = 10) -> DomainSearchResult:
@@ -75,7 +75,7 @@ def service(client: HunterClient, storage: InMemoryStorage) -> HunterService:
                 raw_data={"email": email},
             )
 
-    return HunterService(client=StubHunterClient(), storage=storage)
+    return HunterRecordsGateway(client=StubHunterClient(), storage=storage)
 
 
 @pytest.fixture

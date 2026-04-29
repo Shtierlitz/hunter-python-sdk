@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from hunter_sdk.models import OperationType, StorageRecord
+from hunter_sdk.models import OperationType, StorageRecord, DomainSearchResult, EmailFinderResult
 from hunter_sdk.storage import InMemoryStorage
 
 
@@ -14,7 +14,13 @@ def make_record(record_id: str = "record-1") -> StorageRecord:
         id=record_id,
         operation=OperationType.domain_search,
         request_params={"domain": "durmstrang.com"},
-        operation_result={"status": "ok"},
+        operation_result=DomainSearchResult(
+            domain="durmstrang.com",
+            organization="Durmstrang",
+            pattern="{first}",
+            email_count=1,
+            raw_data={"status": "ok"},
+        ),
         created_at=datetime(2026, 4, 21, tzinfo=UTC),
     )
 
@@ -38,7 +44,12 @@ def test_update_replaces_existing_record() -> None:
         id=created.id,
         operation=OperationType.email_finder,
         request_params={"domain": "durmstrang.com", "first_name": "Igor", "last_name": "Karkarov"},
-        operation_result={"email": "igor@durmstrang.com"},
+        operation_result=EmailFinderResult(
+            email="igor@durmstrang.com",
+            score=95,
+            domain="durmstrang.com",
+            raw_data={"email": "igor@durmstrang.com"},
+        ),
         created_at=created.created_at,
     )
 

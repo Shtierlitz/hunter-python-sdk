@@ -8,9 +8,9 @@ import os
 from pathlib import Path
 from pprint import pprint
 
-from hunter_sdk.client import HunterClient
+from hunter_sdk.client import HunterApiClient
 from hunter_sdk.exceptions import HunterApiError, HunterTransportError
-from hunter_sdk.service import HunterService
+from hunter_sdk.service import HunterRecordsGateway
 from hunter_sdk.storage import InMemoryStorage
 
 
@@ -54,8 +54,8 @@ def main() -> int:
     email = _get_env("HUNTER_EMAIL", "patrick@stripe.com")
 
     storage = InMemoryStorage()
-    client = HunterClient(api_key=api_key)
-    service = HunterService(client=client, storage=storage)
+    client = HunterApiClient(api_key=api_key)
+    service = HunterRecordsGateway(client=client, storage=storage)
 
     print("Running optional smoke demo for the Hunter SDK.")
     print(f"Domain: {domain}")

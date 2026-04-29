@@ -47,7 +47,7 @@ class EmailVerificationResult:
     raw_data: dict[str, Any]
 
 
-OperationResult = DomainSearchResult | EmailFinderResult | EmailVerificationResult | dict[str, Any]
+OperationResult = DomainSearchResult | EmailFinderResult | EmailVerificationResult
 
 
 @dataclass(frozen=True)
