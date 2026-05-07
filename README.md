@@ -62,18 +62,18 @@ from hunter_sdk.client import HunterApiClient
 
 client = HunterApiClient(api_key='test-api-key')
 
-domain_result = client.domain_search(domain='example.com')
+domain_result = client.domains.search(domain='example.com')
 print(domain_result.domain)
 print(domain_result.email_count)
 
-finder_result = client.email_finder(
+finder_result = client.emails.find(
     domain='example.com',
     first_name='Jane',
     last_name='Doe',
 )
 print(finder_result.email)
 
-verification_result = client.email_verifier(email='jane@example.com')
+verification_result = client.emails.verify(email='jane@example.com')
 print(verification_result.status)
 print(verification_result.is_pending)
 ```
@@ -129,7 +129,7 @@ from hunter_sdk.exceptions import HunterApiError, HunterTransportError
 client = HunterApiClient(api_key='test-api-key')
 
 try:
-    result = client.domain_search(domain='example.com')
+    result = client.domains.search(domain='example.com')
     print(result)
 except HunterApiError as api_error:
     print(api_error.status_code)

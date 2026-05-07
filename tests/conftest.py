@@ -1,7 +1,5 @@
 """Shared fixtures and helpers for SDK tests."""
 
-from typing import Any
-
 import httpx
 import pytest
 
@@ -10,10 +8,11 @@ from hunter_sdk.models import (
     DomainSearchResult,
     EmailFinderResult,
     EmailVerificationResult,
+    JsonObject,
     StorageRecord,
 )
 from hunter_sdk.service import HunterRecordsGateway
-from hunter_sdk.protocols import StorageProtocol
+from hunter_sdk.protocols import HunterDomainsProtocol, HunterEmailsProtocol, StorageProtocol
 from hunter_sdk.storage import InMemoryStorage
 
 
@@ -36,10 +35,10 @@ def storage() -> InMemoryStorage:
 
 
 @pytest.fixture
-def service(client: HunterApiClient, storage: InMemoryStorage) -> HunterRecordsGateway:
+def service(storage: InMemoryStorage) -> HunterRecordsGateway:
     """Create a service wired to a stubbed client and real storage."""
-    class StubHunterClient:
-        def domain_search(self, domain: str, limit: int = 10) -> DomainSearchResult:
+    class StubHunterDomains:
+        def search(self, domain: str, limit: int = 10) -> DomainSearchResult:
             return DomainSearchResult(
                 domain=domain,
                 organization="Example",
@@ -48,7 +47,8 @@ def service(client: HunterApiClient, storage: InMemoryStorage) -> HunterRecordsG
                 raw_data={"domain": domain, "limit": limit},
             )
 
-        def email_finder(
+    class StubHunterEmails:
+        def find(
             self,
             domain: str,
             first_name: str,
@@ -65,7 +65,7 @@ def service(client: HunterApiClient, storage: InMemoryStorage) -> HunterRecordsG
                 },
             )
 
-        def email_verifier(self, email: str) -> EmailVerificationResult:
+        def verify(self, email: str) -> EmailVerificationResult:
             return EmailVerificationResult(
                 email=email,
                 status="valid",
@@ -74,6 +74,11 @@ def service(client: HunterApiClient, storage: InMemoryStorage) -> HunterRecordsG
                 is_pending=False,
                 raw_data={"email": email},
             )
+
+    class StubHunterClient:
+        def __init__(self) -> None:
+            self.domains: HunterDomainsProtocol = StubHunterDomains()
+            self.emails: HunterEmailsProtocol = StubHunterEmails()
 
     return HunterRecordsGateway(client=StubHunterClient(), storage=storage)
 
@@ -86,7 +91,7 @@ def response_headers() -> dict[str, str]:
 
 def build_response(
     status_code: int,
-    payload: dict[str, Any],
+    payload: JsonObject,
 ) -> httpx.Response:
     """Build a JSON response for mocked HTTP calls."""
     return httpx.Response(status_code=status_code, json=payload)

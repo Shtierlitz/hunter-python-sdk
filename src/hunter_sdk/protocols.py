@@ -1,22 +1,46 @@
 """Protocol interfaces for the service dependencies."""
 
+from collections.abc import Mapping
 from typing import Protocol
 
 from hunter_sdk.constants import DEFAULT_DOMAIN_SEARCH_LIMIT
-from hunter_sdk.models import DomainSearchResult, EmailFinderResult, EmailVerificationResult, StorageRecord
+from hunter_sdk.models import (
+    DomainSearchResult,
+    EmailFinderResult,
+    EmailVerificationResult,
+    JsonObject,
+    RequestParamValue,
+    StorageRecord,
+)
 
 
-class HunterClientProtocol(Protocol):
-    """Contract for the minimal client API used by the service."""
+class HunterRequesterProtocol(Protocol):
+    """Contract for sending typed JSON requests to Hunter."""
 
-    def domain_search(
+    def request_json(
+        self,
+        path: str,
+        query_params: Mapping[str, RequestParamValue],
+        allowed_status_codes: set[int] | None = None,
+    ) -> tuple[JsonObject, int]:
+        """Send a request and return a JSON object with the HTTP status."""
+
+
+class HunterDomainsProtocol(Protocol):
+    """Contract for Hunter domain operations used by the service."""
+
+    def search(
         self,
         domain: str,
         limit: int = DEFAULT_DOMAIN_SEARCH_LIMIT,
     ) -> DomainSearchResult:
         """Search by domain."""
 
-    def email_finder(
+
+class HunterEmailsProtocol(Protocol):
+    """Contract for Hunter email operations used by the service."""
+
+    def find(
         self,
         domain: str,
         first_name: str,
@@ -24,8 +48,15 @@ class HunterClientProtocol(Protocol):
     ) -> EmailFinderResult:
         """Find an email address."""
 
-    def email_verifier(self, email: str) -> EmailVerificationResult:
+    def verify(self, email: str) -> EmailVerificationResult:
         """Verify an email address."""
+
+
+class HunterClientProtocol(Protocol):
+    """Contract for the minimal client API used by the service."""
+
+    domains: HunterDomainsProtocol
+    emails: HunterEmailsProtocol
 
 
 class StorageProtocol(Protocol):

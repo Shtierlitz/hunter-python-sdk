@@ -31,7 +31,7 @@ def test_domain_search_returns_typed_result(
         ),
     )
 
-    domain_search_result = client.domain_search(domain="durmstrang.com")
+    domain_search_result = client.domains.search(domain="durmstrang.com")
 
     assert domain_search_result.domain == "durmstrang.com"
     assert domain_search_result.organization == "Example"
@@ -56,7 +56,7 @@ def test_email_finder_returns_typed_result(client: HunterApiClient) -> None:
         ),
     )
 
-    email_finder_result = client.email_finder(
+    email_finder_result = client.emails.find(
         domain="example.com",
         first_name="Igor",
         last_name="Karkarov",
@@ -84,7 +84,7 @@ def test_email_verifier_returns_typed_result(client: HunterApiClient) -> None:
         ),
     )
 
-    email_verification_result = client.email_verifier(email="igor@durmstrang.com")
+    email_verification_result = client.emails.verify(email="igor@durmstrang.com")
 
     assert email_verification_result.email == "igor@durmstrang.com"
     assert email_verification_result.status == "valid"
@@ -105,7 +105,7 @@ def test_email_verifier_maps_accepted_response(client: HunterApiClient) -> None:
         ),
     )
 
-    email_verification_result = client.email_verifier(email="igor@durmstrang.com")
+    email_verification_result = client.emails.verify(email="igor@durmstrang.com")
 
     assert email_verification_result.email == "igor@durmstrang.com"
     assert email_verification_result.is_pending is True
@@ -131,7 +131,7 @@ def test_email_verifier_handles_accepted_response_without_data(
         ),
     )
 
-    email_verification_result = client.email_verifier(email="igor@durmstrang.com")
+    email_verification_result = client.emails.verify(email="igor@durmstrang.com")
 
     assert (
         email_verification_result.email,
@@ -162,7 +162,7 @@ def test_client_raises_api_error_for_failed_response(client: HunterApiClient) ->
     )
 
     with pytest.raises(HunterApiError) as error_info:
-        client.domain_search(domain="")
+        client.domains.search(domain="")
 
     assert error_info.value.status_code == 400
     assert "wrong_params" in str(error_info.value)
@@ -176,7 +176,7 @@ def test_client_raises_transport_error(client: HunterApiClient) -> None:
     )
 
     with pytest.raises(HunterTransportError):
-        client.domain_search(domain="durmstrang.com")
+        client.domains.search(domain="durmstrang.com")
 
 
 @respx.mock
@@ -191,7 +191,22 @@ def test_client_wraps_non_json_response(client: HunterApiClient) -> None:
     )
 
     with pytest.raises(HunterTransportError):
-        client.domain_search(domain="durmstrang.com")
+        client.domains.search(domain="durmstrang.com")
+
+
+@respx.mock
+def test_client_wraps_json_array_response(client: HunterApiClient) -> None:
+    """Client should wrap JSON responses that are not objects."""
+    respx.get("https://api.hunter.io/v2/domain-search").mock(
+        return_value=httpx.Response(
+            200,
+            json=[],
+            headers={"Content-Type": "application/json"},
+        ),
+    )
+
+    with pytest.raises(HunterTransportError):
+        client.domains.search(domain="durmstrang.com")
 
 
 def test_client_can_be_closed_explicitly() -> None:
@@ -201,4 +216,4 @@ def test_client_can_be_closed_explicitly() -> None:
     client.close()
 
     with pytest.raises(HunterTransportError):
-        client.domain_search(domain="example.com")
+        client.domains.search(domain="example.com")

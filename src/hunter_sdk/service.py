@@ -11,7 +11,7 @@ from hunter_sdk.constants import (
     FIELD_FIRST_NAME,
     FIELD_LAST_NAME,
 )
-from hunter_sdk.models import OperationResult, OperationType, StorageRecord
+from hunter_sdk.models import OperationResult, OperationType, RequestParams, RequestParamValue, StorageRecord
 from hunter_sdk.protocols import HunterClientProtocol, StorageProtocol
 
 
@@ -33,8 +33,8 @@ class HunterRecordsGateway:
         limit: int = DEFAULT_DOMAIN_SEARCH_LIMIT,
     ) -> StorageRecord:
         """Run domain search and persist the resulting record."""
-        request_params: dict[str, str | int] = {FIELD_DOMAIN: domain, "limit": limit}
-        operation_result = self.client.domain_search(domain=domain, limit=limit)
+        request_params: RequestParams = {FIELD_DOMAIN: domain, "limit": limit}
+        operation_result = self.client.domains.search(domain=domain, limit=limit)
         return self._save_record(OperationType.domain_search, request_params, operation_result)
 
     def find_email(
@@ -44,12 +44,12 @@ class HunterRecordsGateway:
         last_name: str,
     ) -> StorageRecord:
         """Run email finder and persist the resulting record."""
-        request_params: dict[str, str] = {
+        request_params: RequestParams = {
             FIELD_DOMAIN: domain,
             FIELD_FIRST_NAME: first_name,
             FIELD_LAST_NAME: last_name,
         }
-        operation_result = self.client.email_finder(
+        operation_result = self.client.emails.find(
             domain=domain,
             first_name=first_name,
             last_name=last_name,
@@ -58,14 +58,14 @@ class HunterRecordsGateway:
 
     def verify_email(self, email: str) -> StorageRecord:
         """Run email verification and persist the resulting record."""
-        request_params: dict[str, str] = {FIELD_EMAIL: email}
-        operation_result = self.client.email_verifier(email=email)
+        request_params: RequestParams = {FIELD_EMAIL: email}
+        operation_result = self.client.emails.verify(email=email)
         return self._save_record(OperationType.email_verifier, request_params, operation_result)
 
     def _save_record(
         self,
         operation: OperationType,
-        request_params: Mapping[str, str | int],
+        request_params: Mapping[str, RequestParamValue],
         operation_result: OperationResult,
     ) -> StorageRecord:
         record = StorageRecord(

@@ -1,6 +1,6 @@
 """SDK-specific exception types."""
 
-from typing import Any
+from hunter_sdk.models import JsonObject
 
 
 class HunterError(Exception):
@@ -17,7 +17,7 @@ class HunterApiError(HunterError):
     def __init__(
         self,
         status_code: int,
-        errors: list[dict[str, Any]],
+        errors: list[JsonObject],
     ) -> None:
         """Store API error details and build a readable message."""
         self.status_code = status_code
